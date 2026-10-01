@@ -7,5 +7,5 @@ import (
 
 func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	logger.Info("starting todo-api", "key", "value")
+	logger.Info("starting todo-api")
 }
