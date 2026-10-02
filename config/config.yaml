@@ -1,0 +1,11 @@
+
+server:
+  addr: ":8080"
+
+postgres:
+  host: localhost
+  port: "5432"
+  user: "${DB_USER}"
+  password: "${DB_PASSWORD}"
+  dbname: "${DB_NAME}"
+  sslmode: disable

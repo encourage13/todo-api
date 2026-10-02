@@ -1,0 +1,59 @@
+package config
+
+import (
+	"fmt"
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
+
+type ServerConfig struct {
+	Addr string `yaml:"addr"`
+}
+
+type PostgresConfig struct {
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Dbname   string `yaml:"dbname"`
+	Sslmode  string `yaml:"sslmode"`
+}
+
+type Config struct {
+	Server   ServerConfig   `yaml:"server"`
+	Postgres PostgresConfig `yaml:"postgres"`
+}
+
+func validate(cfg *Config) error {
+	if cfg.Postgres.Password == "" {
+		return fmt.Errorf("postgres.port is empty (is DB_PASSWORD set?)")
+	}
+	if cfg.Postgres.User == "" {
+		return fmt.Errorf("postgres.host is empty (is DB_USER set?)")
+	}
+	if cfg.Postgres.Dbname == "" {
+		return fmt.Errorf("postgres.dbname is empty (is DB_NAME set?)")
+	}
+	return nil
+}
+
+func Load(path string) (*Config, error) {
+	var cfg Config
+	data, err := os.ReadFile(path)
+
+	if err != nil {
+		return nil, fmt.Errorf("read config %q: %w", path, err)
+	}
+
+	data = []byte(os.ExpandEnv(string(data)))
+
+	err = yaml.Unmarshal(data, &cfg)
+	if err != nil {
+		return nil, fmt.Errorf("parse config %q: %w", path, err)
+	}
+	if err := validate(&cfg); err != nil {
+		return nil, err
+	}
+	return &cfg, nil
+}
