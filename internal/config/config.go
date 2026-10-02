@@ -27,10 +27,10 @@ type Config struct {
 
 func validate(cfg *Config) error {
 	if cfg.Postgres.Password == "" {
-		return fmt.Errorf("postgres.port is empty (is DB_PASSWORD set?)")
+		return fmt.Errorf("postgres.password is empty (is DB_PASSWORD set?)")
 	}
 	if cfg.Postgres.User == "" {
-		return fmt.Errorf("postgres.host is empty (is DB_USER set?)")
+		return fmt.Errorf("postgres.user is empty (is DB_USER set?)")
 	}
 	if cfg.Postgres.Dbname == "" {
 		return fmt.Errorf("postgres.dbname is empty (is DB_NAME set?)")
