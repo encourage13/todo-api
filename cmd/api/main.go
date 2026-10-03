@@ -38,7 +38,7 @@ func run(logger *slog.Logger, configPath string) error {
 
 	pool, err := repository.NewPostgresPool(ctx, cfg.Postgres.DSN())
 	if err != nil {
-		return fmt.Errorf("dsn error: %w", err)
+		return fmt.Errorf("connect to postgres: %w", err)
 	}
 	defer pool.Close()
 
