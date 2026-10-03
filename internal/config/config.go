@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"net"
+	"net/url"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -56,4 +58,19 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	return &cfg, nil
+}
+
+func (cfg PostgresConfig) DSN() string {
+	q := url.Values{}
+	q.Set("sslmode", cfg.Sslmode)
+
+	u := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(cfg.User, cfg.Password),
+		Host:     net.JoinHostPort(cfg.Host, cfg.Port),
+		Path:     cfg.Dbname,
+		RawQuery: q.Encode(),
+	}
+
+	return u.String()
 }
