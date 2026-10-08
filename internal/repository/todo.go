@@ -69,3 +69,30 @@ func (r *TodoRepository) List(ctx context.Context, userID uuid.UUID) ([]model.To
 	}
 	return tasks, nil
 }
+
+func (r *TodoRepository) Update(ctx context.Context, t *model.Todo) error {
+	query := `UPDATE todos SET title=$1, description=$2, completed=$3, updated_at=now() WHERE id=$4 AND user_id=$5 RETURNING updated_at`
+
+	err := r.pool.QueryRow(ctx, query, t.Title, t.Description, t.Completed, t.ID, t.UserID).Scan(&t.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.ErrTodoNotFound
+		}
+		return fmt.Errorf("update task: %w", err)
+	}
+	return nil
+}
+
+func (r *TodoRepository) Delete(ctx context.Context, id, userID uuid.UUID) error {
+	query := `DELETE FROM todos WHERE id=$1 AND user_id=$2`
+
+	tag, err := r.pool.Exec(ctx, query, id, userID)
+	if err != nil {
+		return fmt.Errorf("delete task: %w", err)
+	}
+
+	if tag.RowsAffected() == 0 {
+		return model.ErrTodoNotFound
+	}
+	return nil
+}
