@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -22,9 +23,15 @@ type PostgresConfig struct {
 	Sslmode  string `yaml:"sslmode"`
 }
 
+type JWTConfig struct {
+	Secret string        `yaml:"secret"`
+	TTL    time.Duration `yaml:"ttl"`
+}
+
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Postgres PostgresConfig `yaml:"postgres"`
+	JWT      JWTConfig      `yaml:"jwt"`
 }
 
 func validate(cfg *Config) error {
@@ -36,6 +43,12 @@ func validate(cfg *Config) error {
 	}
 	if cfg.Postgres.Dbname == "" {
 		return fmt.Errorf("postgres.dbname is empty (is DB_NAME set?)")
+	}
+	if len(cfg.JWT.Secret) < 32 {
+		return fmt.Errorf("jwt.secret is too short (is JWT_SECRET at lest 32 bytes?)")
+	}
+	if cfg.JWT.TTL < 0 {
+		return fmt.Errorf("jwt.ttl is empty (is ttl set?)")
 	}
 	return nil
 }

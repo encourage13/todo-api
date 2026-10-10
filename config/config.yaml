@@ -9,3 +9,7 @@ postgres:
   password: "${DB_PASSWORD}"
   dbname: "${DB_NAME}"
   sslmode: disable
+
+jwt:
+  secret: "${JWT_SECRET}"
+  ttl: 24h
