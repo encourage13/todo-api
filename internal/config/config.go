@@ -47,7 +47,7 @@ func validate(cfg *Config) error {
 	if len(cfg.JWT.Secret) < 32 {
 		return fmt.Errorf("jwt.secret is too short (is JWT_SECRET at lest 32 bytes?)")
 	}
-	if cfg.JWT.TTL < 0 {
+	if cfg.JWT.TTL <= 0 {
 		return fmt.Errorf("jwt.ttl is empty (is ttl set?)")
 	}
 	return nil
