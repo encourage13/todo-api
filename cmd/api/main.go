@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/encourage13/todo-api/internal/auth"
 	"github.com/encourage13/todo-api/internal/config"
 	"github.com/encourage13/todo-api/internal/repository"
 	"github.com/encourage13/todo-api/internal/service"
@@ -49,7 +50,8 @@ func run(logger *slog.Logger, configPath string) error {
 
 	userRepo := repository.NewUserRepository(pool)
 	userSvc := service.NewUserService(userRepo)
-	authHandler := httpapi.NewAuthHandler(userSvc, logger)
+	tokenManager := auth.NewTokenManager(cfg.JWT.Secret, cfg.JWT.TTL)
+	authHandler := httpapi.NewAuthHandler(userSvc, logger, tokenManager)
 
 	srv := &http.Server{
 		Addr:              cfg.Server.Addr,

@@ -16,6 +16,7 @@ type userService interface {
 
 type AuthHandler struct {
 	users  userService
+	tokens tokenIssuer
 	logger *slog.Logger
 }
 
@@ -29,8 +30,16 @@ type authResponse struct {
 	Email string    `json:"email"`
 }
 
-func NewAuthHandler(u userService, l *slog.Logger) *AuthHandler {
-	return &AuthHandler{users: u, logger: l}
+type tokenResponse struct {
+	Token string `json:"token"`
+}
+
+type tokenIssuer interface {
+	Issue(userID uuid.UUID) (string, error)
+}
+
+func NewAuthHandler(u userService, l *slog.Logger, t tokenIssuer) *AuthHandler {
+	return &AuthHandler{users: u, tokens: t, logger: l}
 }
 
 func (h *AuthHandler) register(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +73,13 @@ func (h *AuthHandler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, authResponse{ID: user.ID, Email: user.Email})
+	token, err := h.tokens.Issue(user.ID)
+	if err != nil {
+		handleServiceError(w, h.logger, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, tokenResponse{Token: token})
 }
 
 func (h *AuthHandler) Routes() http.Handler {
