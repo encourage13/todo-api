@@ -5,11 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/encourage13/todo-api/internal/config"
 	"github.com/encourage13/todo-api/internal/repository"
+	"github.com/encourage13/todo-api/internal/service"
+	"github.com/encourage13/todo-api/internal/transport/httpapi"
 )
 
 func main() {
@@ -42,7 +45,22 @@ func run(logger *slog.Logger, configPath string) error {
 	}
 	defer pool.Close()
 
-	logger.Info("success connection", "host", cfg.Postgres.Host, "addr", cfg.Server.Addr)
+	logger.Info("success connection", "host", cfg.Postgres.Host)
+
+	userRepo := repository.NewUserRepository(pool)
+	userSvc := service.NewUserService(userRepo)
+	authHandler := httpapi.NewAuthHandler(userSvc, logger)
+
+	srv := &http.Server{
+		Addr:              cfg.Server.Addr,
+		Handler:           authHandler.Routes(),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	logger.Info("server starting", "addr", srv.Addr)
+	if err := srv.ListenAndServe(); err != nil {
+		return fmt.Errorf("listen and serve: %w", err)
+	}
 
 	return nil
 }
