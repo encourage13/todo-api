@@ -32,7 +32,7 @@ func (u *UserService) Register(ctx context.Context, email, password string) (*mo
 	}
 
 	if !(len(password) >= 8 && len(password) <= 72) {
-		return nil, fmt.Errorf("%w: password must be 8-72 characters long", model.ErrInvalidInput)
+		return nil, fmt.Errorf("%w: password must be 8-72 bytes long", model.ErrInvalidInput)
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
