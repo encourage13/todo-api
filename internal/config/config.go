@@ -44,6 +44,9 @@ func validate(cfg *Config) error {
 	if cfg.Postgres.Dbname == "" {
 		return fmt.Errorf("postgres.dbname is empty (is DB_NAME set?)")
 	}
+	if cfg.Postgres.Host == "" {
+		return fmt.Errorf("postgres.host is empty (is DB_HOST set?)")
+	}
 	if len(cfg.JWT.Secret) < 32 {
 		return fmt.Errorf("jwt.secret is too short (is JWT_SECRET at lest 32 bytes?)")
 	}
