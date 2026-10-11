@@ -1,0 +1,363 @@
+basePath: /
+definitions:
+  httpapi.authRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: secret123
+        maxLength: 72
+        minLength: 8
+        type: string
+    type: object
+  httpapi.authResponse:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      id:
+        format: uuid
+        type: string
+    type: object
+  httpapi.createTodoRequest:
+    properties:
+      description:
+        example: 2 liters
+        maxLength: 2000
+        type: string
+      title:
+        example: Buy milk
+        maxLength: 200
+        minLength: 1
+        type: string
+    type: object
+  httpapi.errorResponse:
+    properties:
+      error:
+        example: invalid request body
+        type: string
+    type: object
+  httpapi.meResponse:
+    properties:
+      id:
+        format: uuid
+        type: string
+    type: object
+  httpapi.todoResponse:
+    properties:
+      completed:
+        type: boolean
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        format: uuid
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  httpapi.tokenResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  httpapi.updateTodoRequest:
+    properties:
+      completed:
+        example: true
+        type: boolean
+      description:
+        example: 2 liters
+        maxLength: 2000
+        type: string
+      title:
+        example: Buy milk
+        maxLength: 200
+        minLength: 1
+        type: string
+    type: object
+info:
+  contact: {}
+  description: REST API for managing personal todo lists.
+  title: Todo API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Returns a JWT to pass in the Authorization header as "Bearer <token>".
+      parameters:
+      - description: User credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.authRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.tokenResponse'
+        "400":
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "401":
+          description: Invalid email or password
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      summary: Log in
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.authRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/httpapi.authResponse'
+        "400":
+          description: Invalid request body, email or password
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "409":
+          description: Email already registered
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.meResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - auth
+  /todos:
+    get:
+      description: Returns all todos of the current user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/httpapi.todoResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: List todos
+      tags:
+      - todos
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Todo to create
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.createTodoRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/httpapi.todoResponse'
+        "400":
+          description: Invalid request body or validation error
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a todo
+      tags:
+      - todos
+  /todos/{id}:
+    delete:
+      parameters:
+      - description: Todo ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Invalid todo id
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "404":
+          description: Todo not found
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a todo
+      tags:
+      - todos
+    get:
+      parameters:
+      - description: Todo ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.todoResponse'
+        "400":
+          description: Invalid todo id
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "404":
+          description: Todo not found
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get a todo
+      tags:
+      - todos
+    patch:
+      consumes:
+      - application/json
+      description: Partially updates a todo. Only provided fields are changed; at
+        least one field is required.
+      parameters:
+      - description: Todo ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/httpapi.updateTodoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.todoResponse'
+        "400":
+          description: Invalid todo id, request body or validation error
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "404":
+          description: Todo not found
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.errorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a todo
+      tags:
+      - todos
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and the JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

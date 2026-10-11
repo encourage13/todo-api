@@ -21,17 +21,17 @@ type AuthHandler struct {
 }
 
 type authRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" example:"user@example.com"`
+	Password string `json:"password" example:"secret123" minLength:"8" maxLength:"72"`
 }
 
 type authResponse struct {
-	ID    uuid.UUID `json:"id"`
-	Email string    `json:"email"`
+	ID    uuid.UUID `json:"id" swaggertype:"string" format:"uuid"`
+	Email string    `json:"email" example:"user@example.com"`
 }
 
 type tokenResponse struct {
-	Token string `json:"token"`
+	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 }
 
 type tokenIssuer interface {
@@ -42,6 +42,18 @@ func NewAuthHandler(u userService, l *slog.Logger, t tokenIssuer) *AuthHandler {
 	return &AuthHandler{users: u, tokens: t, logger: l}
 }
 
+// register godoc
+//
+//	@Summary	Register a new user
+//	@Tags		auth
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		authRequest	true	"User credentials"
+//	@Success	201		{object}	authResponse
+//	@Failure	400		{object}	errorResponse	"Invalid request body, email or password"
+//	@Failure	409		{object}	errorResponse	"Email already registered"
+//	@Failure	500		{object}	errorResponse
+//	@Router		/auth/register [post]
 func (h *AuthHandler) register(w http.ResponseWriter, r *http.Request) {
 	var req authRequest
 	err := decodeJSON(w, r, &req)
@@ -59,6 +71,19 @@ func (h *AuthHandler) register(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, authResponse{ID: user.ID, Email: user.Email})
 }
 
+// login godoc
+//
+//	@Summary		Log in
+//	@Description	Returns a JWT to pass in the Authorization header as "Bearer <token>".
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		authRequest	true	"User credentials"
+//	@Success		200		{object}	tokenResponse
+//	@Failure		400		{object}	errorResponse	"Invalid request body"
+//	@Failure		401		{object}	errorResponse	"Invalid email or password"
+//	@Failure		500		{object}	errorResponse
+//	@Router			/auth/login [post]
 func (h *AuthHandler) login(w http.ResponseWriter, r *http.Request) {
 	var req authRequest
 	err := decodeJSON(w, r, &req)

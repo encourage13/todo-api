@@ -11,13 +11,25 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/encourage13/todo-api/docs"
 	"github.com/encourage13/todo-api/internal/auth"
 	"github.com/encourage13/todo-api/internal/config"
 	"github.com/encourage13/todo-api/internal/repository"
 	"github.com/encourage13/todo-api/internal/service"
 	"github.com/encourage13/todo-api/internal/transport/httpapi"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
+// @title						Todo API
+// @version					1.0
+// @description				REST API for managing personal todo lists.
+// @BasePath					/
+// @schemes					http
+//
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
+// @description				Type "Bearer" followed by a space and the JWT token.
 func main() {
 
 	configPath := flag.String("config", "config/config.yaml", "path to config")
@@ -72,6 +84,7 @@ func run(logger *slog.Logger, configPath string) error {
 	mux.Handle("GET /me", protected)
 	mux.Handle("/todos", protectedTodo)
 	mux.Handle("/todos/", protectedTodo)
+	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
 	srv := &http.Server{
 		Addr:              cfg.Server.Addr,
 		Handler:           httpapi.RequestID(httpapi.RequestLogger(logger, httpapi.JSONErrors(mux))),

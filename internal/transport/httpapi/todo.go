@@ -25,18 +25,18 @@ type TodoHandler struct {
 }
 
 type createTodoRequest struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Title       string `json:"title" example:"Buy milk" minLength:"1" maxLength:"200"`
+	Description string `json:"description" example:"2 liters" maxLength:"2000"`
 }
 
 type updateTodoRequest struct {
-	Title       *string `json:"title"`
-	Description *string `json:"description"`
-	Completed   *bool   `json:"completed"`
+	Title       *string `json:"title" example:"Buy milk" minLength:"1" maxLength:"200"`
+	Description *string `json:"description" example:"2 liters" maxLength:"2000"`
+	Completed   *bool   `json:"completed" example:"true"`
 }
 
 type todoResponse struct {
-	ID          uuid.UUID `json:"id"`
+	ID          uuid.UUID `json:"id" swaggertype:"string" format:"uuid"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	Completed   bool      `json:"completed"`
@@ -78,6 +78,19 @@ func parseIDParam(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) {
 	return id, true
 }
 
+// create godoc
+//
+//	@Summary	Create a todo
+//	@Tags		todos
+//	@Accept		json
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		request	body		createTodoRequest	true	"Todo to create"
+//	@Success	201		{object}	todoResponse
+//	@Failure	400		{object}	errorResponse	"Invalid request body or validation error"
+//	@Failure	401		{object}	errorResponse
+//	@Failure	500		{object}	errorResponse
+//	@Router		/todos [post]
 func (h *TodoHandler) create(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireUserID(w, r)
 	if !ok {
@@ -99,6 +112,17 @@ func (h *TodoHandler) create(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, toTodoResponse(*todo))
 }
 
+// list godoc
+//
+//	@Summary		List todos
+//	@Description	Returns all todos of the current user.
+//	@Tags			todos
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		todoResponse
+//	@Failure		401	{object}	errorResponse
+//	@Failure		500	{object}	errorResponse
+//	@Router			/todos [get]
 func (h *TodoHandler) list(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireUserID(w, r)
 	if !ok {
@@ -118,6 +142,19 @@ func (h *TodoHandler) list(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, items)
 }
 
+// get godoc
+//
+//	@Summary	Get a todo
+//	@Tags		todos
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id	path		string	true	"Todo ID"	Format(uuid)
+//	@Success	200	{object}	todoResponse
+//	@Failure	400	{object}	errorResponse	"Invalid todo id"
+//	@Failure	401	{object}	errorResponse
+//	@Failure	404	{object}	errorResponse	"Todo not found"
+//	@Failure	500	{object}	errorResponse
+//	@Router		/todos/{id} [get]
 func (h *TodoHandler) get(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireUserID(w, r)
 	if !ok {
@@ -136,6 +173,19 @@ func (h *TodoHandler) get(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, toTodoResponse(*todo))
 }
 
+// delete godoc
+//
+//	@Summary	Delete a todo
+//	@Tags		todos
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Param		id	path	string	true	"Todo ID"	Format(uuid)
+//	@Success	204
+//	@Failure	400	{object}	errorResponse	"Invalid todo id"
+//	@Failure	401	{object}	errorResponse
+//	@Failure	404	{object}	errorResponse	"Todo not found"
+//	@Failure	500	{object}	errorResponse
+//	@Router		/todos/{id} [delete]
 func (h *TodoHandler) delete(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireUserID(w, r)
 	if !ok {
@@ -153,6 +203,22 @@ func (h *TodoHandler) delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// update godoc
+//
+//	@Summary		Update a todo
+//	@Description	Partially updates a todo. Only provided fields are changed; at least one field is required.
+//	@Tags			todos
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string				true	"Todo ID"	Format(uuid)
+//	@Param			request	body		updateTodoRequest	true	"Fields to update"
+//	@Success		200		{object}	todoResponse
+//	@Failure		400		{object}	errorResponse	"Invalid todo id, request body or validation error"
+//	@Failure		401		{object}	errorResponse
+//	@Failure		404		{object}	errorResponse	"Todo not found"
+//	@Failure		500		{object}	errorResponse
+//	@Router			/todos/{id} [patch]
 func (h *TodoHandler) update(w http.ResponseWriter, r *http.Request) {
 	userID, ok := requireUserID(w, r)
 	if !ok {

@@ -13,7 +13,7 @@ type tokenParser interface {
 }
 
 type meResponse struct {
-	ID uuid.UUID `json:"id"`
+	ID uuid.UUID `json:"id" swaggertype:"string" format:"uuid"`
 }
 
 type ctxKey struct{}
@@ -69,6 +69,16 @@ func RequestIDFromContext(ctx context.Context) string {
 	return value
 }
 
+// Me godoc
+//
+//	@Summary	Get current user
+//	@Tags		auth
+//	@Produce	json
+//	@Security	BearerAuth
+//	@Success	200	{object}	meResponse
+//	@Failure	401	{object}	errorResponse
+//	@Failure	500	{object}	errorResponse
+//	@Router		/me [get]
 func Me(w http.ResponseWriter, r *http.Request) {
 	userID, ok := UserIDFromContext(r.Context())
 	if !ok {
