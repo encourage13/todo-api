@@ -53,9 +53,15 @@ func run(logger *slog.Logger, configPath string) error {
 	tokenManager := auth.NewTokenManager(cfg.JWT.Secret, cfg.JWT.TTL)
 	authHandler := httpapi.NewAuthHandler(userSvc, logger, tokenManager)
 
+	mux := http.NewServeMux()
+	mux.Handle("/auth/", authHandler.Routes())
+	requireAuth := httpapi.RequireAuth(tokenManager)
+	protected := requireAuth(http.HandlerFunc(httpapi.Me))
+
+	mux.Handle("GET /me", protected)
 	srv := &http.Server{
 		Addr:              cfg.Server.Addr,
-		Handler:           authHandler.Routes(),
+		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
