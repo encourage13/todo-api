@@ -86,6 +86,7 @@ func run(logger *slog.Logger, configPath string) error {
 	select {
 	case <-ctx.Done():
 		logger.Info("shutting down...")
+		stop()
 	case err := <-errCh:
 		return fmt.Errorf("listen and serve: %w", err)
 	}
@@ -94,6 +95,7 @@ func run(logger *slog.Logger, configPath string) error {
 	defer shutdownCancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
+		srv.Close()
 		return fmt.Errorf("shutdown: %w", err)
 	}
 	logger.Info("server stopped")
