@@ -94,7 +94,7 @@ func (s *TodoService) Create(ctx context.Context, userID uuid.UUID, title, descr
 
 func (s *TodoService) Update(ctx context.Context, userID, id uuid.UUID, in UpdateTodoInput) (*model.Todo, error) {
 	if in.Completed == nil && in.Description == nil && in.Title == nil {
-		return nil, fmt.Errorf("nothing to update: %w", model.ErrInvalidInput)
+		return nil, fmt.Errorf("%w: nothing to update", model.ErrInvalidInput)
 	}
 
 	currentTask, err := s.store.GetByID(ctx, id, userID)

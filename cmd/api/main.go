@@ -49,16 +49,22 @@ func run(logger *slog.Logger, configPath string) error {
 	logger.Info("success connection", "host", cfg.Postgres.Host)
 
 	userRepo := repository.NewUserRepository(pool)
+	todoRepo := repository.NewTodoRepository(pool)
 	userSvc := service.NewUserService(userRepo)
+	todoSvc := service.NewTodoService(todoRepo)
 	tokenManager := auth.NewTokenManager(cfg.JWT.Secret, cfg.JWT.TTL)
 	authHandler := httpapi.NewAuthHandler(userSvc, logger, tokenManager)
+	todoHandler := httpapi.NewTodoHandler(todoSvc, logger)
 
 	mux := http.NewServeMux()
 	mux.Handle("/auth/", authHandler.Routes())
 	requireAuth := httpapi.RequireAuth(tokenManager)
 	protected := requireAuth(http.HandlerFunc(httpapi.Me))
+	protectedTodo := requireAuth(todoHandler.Routes())
 
 	mux.Handle("GET /me", protected)
+	mux.Handle("/todos", protectedTodo)
+	mux.Handle("/todos/", protectedTodo)
 	srv := &http.Server{
 		Addr:              cfg.Server.Addr,
 		Handler:           mux,
