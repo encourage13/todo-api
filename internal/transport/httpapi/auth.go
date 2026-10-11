@@ -52,7 +52,7 @@ func (h *AuthHandler) register(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := h.users.Register(r.Context(), req.Email, req.Password)
 	if err != nil {
-		handleServiceError(w, h.logger, err)
+		handleServiceError(w, r, h.logger, err)
 		return
 	}
 
@@ -69,13 +69,13 @@ func (h *AuthHandler) login(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := h.users.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
-		handleServiceError(w, h.logger, err)
+		handleServiceError(w, r, h.logger, err)
 		return
 	}
 
 	token, err := h.tokens.Issue(user.ID)
 	if err != nil {
-		handleServiceError(w, h.logger, err)
+		handleServiceError(w, r, h.logger, err)
 		return
 	}
 

@@ -67,7 +67,7 @@ func run(logger *slog.Logger, configPath string) error {
 	mux.Handle("/todos/", protectedTodo)
 	srv := &http.Server{
 		Addr:              cfg.Server.Addr,
-		Handler:           httpapi.JSONErrors(mux),
+		Handler:           httpapi.RequestID(httpapi.RequestLogger(logger, httpapi.JSONErrors(mux))),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

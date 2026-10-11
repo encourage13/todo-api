@@ -8,7 +8,7 @@ import (
 	"github.com/encourage13/todo-api/internal/model"
 )
 
-func handleServiceError(w http.ResponseWriter, logger *slog.Logger, err error) {
+func handleServiceError(w http.ResponseWriter, r *http.Request, logger *slog.Logger, err error) {
 	switch {
 	case errors.Is(err, model.ErrInvalidInput):
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -19,7 +19,8 @@ func handleServiceError(w http.ResponseWriter, logger *slog.Logger, err error) {
 	case errors.Is(err, model.ErrTodoNotFound):
 		writeError(w, http.StatusNotFound, err.Error())
 	default:
-		logger.Error("internal error", "error", err)
+		requestID := RequestIDFromContext(r.Context())
+		logger.Error("internal error", "request_id", requestID, "error", err)
 		writeError(w, http.StatusInternalServerError, "internal error")
 	}
 }

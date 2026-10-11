@@ -93,7 +93,7 @@ func (h *TodoHandler) create(w http.ResponseWriter, r *http.Request) {
 
 	todo, err := h.todos.Create(r.Context(), userID, req.Title, req.Description)
 	if err != nil {
-		handleServiceError(w, h.logger, err)
+		handleServiceError(w, r, h.logger, err)
 		return
 	}
 	writeJSON(w, http.StatusCreated, toTodoResponse(*todo))
@@ -107,7 +107,7 @@ func (h *TodoHandler) list(w http.ResponseWriter, r *http.Request) {
 
 	todos, err := h.todos.List(r.Context(), userID)
 	if err != nil {
-		handleServiceError(w, h.logger, err)
+		handleServiceError(w, r, h.logger, err)
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h *TodoHandler) get(w http.ResponseWriter, r *http.Request) {
 
 	todo, err := h.todos.Get(r.Context(), userID, id)
 	if err != nil {
-		handleServiceError(w, h.logger, err)
+		handleServiceError(w, r, h.logger, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toTodoResponse(*todo))
@@ -147,7 +147,7 @@ func (h *TodoHandler) delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.todos.Delete(r.Context(), userID, id); err != nil {
-		handleServiceError(w, h.logger, err)
+		handleServiceError(w, r, h.logger, err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -178,7 +178,7 @@ func (h *TodoHandler) update(w http.ResponseWriter, r *http.Request) {
 
 	todo, err := h.todos.Update(r.Context(), userID, id, updateReq)
 	if err != nil {
-		handleServiceError(w, h.logger, err)
+		handleServiceError(w, r, h.logger, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, toTodoResponse(*todo))
