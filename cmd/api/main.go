@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/encourage13/todo-api/internal/auth"
@@ -37,16 +39,21 @@ func run(logger *slog.Logger, configPath string) error {
 		return fmt.Errorf("load config: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	connectCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	pool, err := repository.NewPostgresPool(ctx, cfg.Postgres.DSN())
+	pool, err := repository.NewPostgresPool(connectCtx, cfg.Postgres.DSN())
 	if err != nil {
 		return fmt.Errorf("connect to postgres: %w", err)
 	}
 	defer pool.Close()
 
 	logger.Info("success connection", "host", cfg.Postgres.Host)
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	errCh := make(chan error, 1)
 
 	userRepo := repository.NewUserRepository(pool)
 	todoRepo := repository.NewTodoRepository(pool)
@@ -71,10 +78,24 @@ func run(logger *slog.Logger, configPath string) error {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
+	go func() {
+		errCh <- srv.ListenAndServe()
+	}()
 	logger.Info("server starting", "addr", srv.Addr)
-	if err := srv.ListenAndServe(); err != nil {
+
+	select {
+	case <-ctx.Done():
+		logger.Info("shutting down...")
+	case err := <-errCh:
 		return fmt.Errorf("listen and serve: %w", err)
 	}
 
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer shutdownCancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("shutdown: %w", err)
+	}
+	logger.Info("server stopped")
 	return nil
 }
